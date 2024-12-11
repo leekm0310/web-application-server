@@ -3,9 +3,13 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Map;
 
+import db.DataBase;
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.HttpRequestUtils;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -22,9 +26,9 @@ public class RequestHandler extends Thread {
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
-            String url = readInputStream(in);
+
             DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+            byte[] body = readInputStream(in);
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
@@ -32,11 +36,25 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private String readInputStream(InputStream in) throws IOException {
+    private byte[] readInputStream(InputStream in) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String line = br.readLine();
+        log.debug("[line] :" + line);
         String[] split = line.split(" ");
-        return split[1];
+        String requestLine = split[1];
+        if (requestLine.contains(".html")) {
+            return Files.readAllBytes(new File("./webapp" + requestLine).toPath());
+        }
+        if (requestLine.contains("/user/create")) {
+            int index = requestLine.indexOf('?');
+            String requestPath = requestLine.substring(0, index);
+            String paramString = requestLine.substring(index+1);
+            // user 객체 생성
+            Map<String, String> params = HttpRequestUtils.parseQueryString(paramString);
+            // user 객체 저장
+            DataBase.addUser(new User(params.get("userId"), params.get("password"), params.get("name"), params.get("mail")));
+        }
+        return null; // 수정 필요
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
