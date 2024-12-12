@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import db.DataBase;
+import model.User;
 
 public class HttpRequestUtils {
     /**
@@ -51,6 +53,19 @@ public class HttpRequestUtils {
 
     public static Pair parseHeader(String header) {
         return getKeyValue(header, ": ");
+    }
+
+    public static String readRequestLine(String requestLine) {
+        if (requestLine.contains("/user/create")) {
+            int index = requestLine.indexOf('?');
+            String requestPath = requestLine.substring(0, index);
+            String paramString = requestLine.substring(index+1);
+            // user 객체 생성
+            Map<String, String> params = HttpRequestUtils.parseQueryString(paramString);
+            // user 객체 저장
+            DataBase.addUser(new User(params.get("userId"), params.get("password"), params.get("name"), params.get("mail")));
+        }
+        return "index.html";//수정필요
     }
 
     public static class Pair {

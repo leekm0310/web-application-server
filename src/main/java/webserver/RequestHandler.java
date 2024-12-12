@@ -46,15 +46,9 @@ public class RequestHandler extends Thread {
             return Files.readAllBytes(new File("./webapp" + requestLine).toPath());
         }
         if (requestLine.contains("/user/create")) {
-            int index = requestLine.indexOf('?');
-            String requestPath = requestLine.substring(0, index);
-            String paramString = requestLine.substring(index+1);
-            // user 객체 생성
-            Map<String, String> params = HttpRequestUtils.parseQueryString(paramString);
-            // user 객체 저장
-            DataBase.addUser(new User(params.get("userId"), params.get("password"), params.get("name"), params.get("mail")));
+            HttpRequestUtils.readRequestLine(requestLine);
         }
-        return null; // 수정 필요
+        return Files.readAllBytes(new File("./webapp" + requestLine).toPath()); // 수정 필요
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
