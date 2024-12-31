@@ -1,5 +1,7 @@
 package util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -55,17 +57,28 @@ public class HttpRequestUtils {
         return getKeyValue(header, ": ");
     }
 
-    public static String readRequestLine(String requestLine) {
-        if (requestLine.contains("/user/create")) {
-            int index = requestLine.indexOf('?');
-            String requestPath = requestLine.substring(0, index);
-            String paramString = requestLine.substring(index+1);
-            // user 객체 생성
-            Map<String, String> params = HttpRequestUtils.parseQueryString(paramString);
-            // user 객체 저장
-            DataBase.addUser(new User(params.get("userId"), params.get("password"), params.get("name"), params.get("mail")));
+    public static boolean readRequestLine(BufferedReader br) throws IOException {
+        int contentLength = 0;
+        String line = br.readLine();
+        while (!line.equals("")) {
+            line = br.readLine();
+            if (line.contains("Content-Length")) {
+                contentLength = getLength(line);
+            }
         }
-        return "index.html";//수정필요
+
+        String data = IOUtils.readData(br, contentLength);
+
+        // user 객체 생성
+        Map<String, String> params = HttpRequestUtils.parseQueryString(data);
+        // user 객체 저장
+        DataBase.addUser(new User(params.get("userId"), params.get("password"), params.get("name"), params.get("mail")));
+        return true;
+    }
+
+    public static int getLength(String str) {
+        String[] split = str.split(":");
+        return Integer.parseInt(split[1].trim());
     }
 
     public static class Pair {

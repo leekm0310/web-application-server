@@ -3,10 +3,7 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.Map;
 
-import db.DataBase;
-import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
@@ -44,9 +41,12 @@ public class RequestHandler extends Thread {
         String requestLine = split[1];
         if (requestLine.contains(".html")) {
             return Files.readAllBytes(new File("./webapp" + requestLine).toPath());
-        }
-        if (requestLine.contains("/user/create")) {
-            HttpRequestUtils.readRequestLine(requestLine);
+        } else if (requestLine.contains("/user/create")) {
+            if (HttpRequestUtils.readRequestLine(br)) {
+                //회원가입 성공시
+                return Files.readAllBytes(new File("./webapp" + "/index.html").toPath());
+            }
+
         }
         return Files.readAllBytes(new File("./webapp" + requestLine).toPath()); // 수정 필요
     }
