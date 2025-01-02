@@ -66,7 +66,7 @@ public class HttpRequestUtils {
                 contentLength = getLength(line);
             }
         }
-ㅁ
+
         return IOUtils.readData(br, contentLength);
     }
 
