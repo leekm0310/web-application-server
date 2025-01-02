@@ -78,6 +78,16 @@ public class HttpRequestUtils {
         return true;
     }
 
+    public static boolean findUser(String data) {
+        // TODO 유저 없을 경우
+        Map<String, String> loginData = HttpRequestUtils.parseQueryString(data);
+        User user = DataBase.findUserById(loginData.get("userId"));
+        if (user.getPassword() == loginData.get("password")) {
+            return true;
+        }
+        return false;
+    }
+
     public static int getLength(String str) {
         String[] split = str.split(":");
         return Integer.parseInt(split[1].trim());

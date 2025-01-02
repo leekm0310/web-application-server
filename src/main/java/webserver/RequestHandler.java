@@ -1,6 +1,7 @@
 package webserver;
 
 import java.io.*;
+import java.net.HttpCookie;
 import java.net.Socket;
 import java.nio.file.Files;
 
@@ -25,7 +26,7 @@ public class RequestHandler extends Thread {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
 
             DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = readInputStream(in);
+            byte[] body = readInputStream(in); // TODO 이렇게 하지 말고 바꿔야 된다. 응답 헤더 보내야 하니까
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
@@ -45,6 +46,11 @@ public class RequestHandler extends Thread {
             String data = HttpRequestUtils.getData(br);
             if (HttpRequestUtils.saveUser(data)) {
                 return Files.readAllBytes(new File("./webapp" + "/index.html").toPath());
+            }
+        } else if (requestLine.contains("/user/login")) {
+            String data = HttpRequestUtils.getData(br);
+            if (HttpRequestUtils.findUser(data)) {
+
             }
         }
         return Files.readAllBytes(new File("./webapp" + requestLine).toPath()); // 수정 필요
