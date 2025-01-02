@@ -42,11 +42,10 @@ public class RequestHandler extends Thread {
         if (requestLine.contains(".html")) {
             return Files.readAllBytes(new File("./webapp" + requestLine).toPath());
         } else if (requestLine.contains("/user/create")) {
-            if (HttpRequestUtils.readRequestLine(br)) {
-                //회원가입 성공시
+            String data = HttpRequestUtils.getData(br);
+            if (HttpRequestUtils.saveUser(data)) {
                 return Files.readAllBytes(new File("./webapp" + "/index.html").toPath());
             }
-
         }
         return Files.readAllBytes(new File("./webapp" + requestLine).toPath()); // 수정 필요
     }

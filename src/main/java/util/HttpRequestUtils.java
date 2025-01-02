@@ -57,7 +57,7 @@ public class HttpRequestUtils {
         return getKeyValue(header, ": ");
     }
 
-    public static boolean readRequestLine(BufferedReader br) throws IOException {
+    public static String getData(BufferedReader br) throws IOException {
         int contentLength = 0;
         String line = br.readLine();
         while (!line.equals("")) {
@@ -66,9 +66,11 @@ public class HttpRequestUtils {
                 contentLength = getLength(line);
             }
         }
+ㅁ
+        return IOUtils.readData(br, contentLength);
+    }
 
-        String data = IOUtils.readData(br, contentLength);
-
+    public static boolean saveUser(String data) {
         // user 객체 생성
         Map<String, String> params = HttpRequestUtils.parseQueryString(data);
         // user 객체 저장
