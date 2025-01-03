@@ -82,7 +82,7 @@ public class HttpRequestUtils {
         // TODO 유저 없을 경우
         Map<String, String> loginData = HttpRequestUtils.parseQueryString(data);
         User user = DataBase.findUserById(loginData.get("userId"));
-        if (user.getPassword() == loginData.get("password")) {
+        if (user.getPassword().equals(loginData.get("password"))) {
             return true;
         }
         return false;
