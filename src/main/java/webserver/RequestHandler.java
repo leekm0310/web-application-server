@@ -3,7 +3,11 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Map;
 
+import db.DataBase;
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
@@ -23,6 +27,7 @@ public class RequestHandler extends Thread {
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
+            // TODO 리팩토링 절실..
 
             DataOutputStream dos = new DataOutputStream(out);
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -38,8 +43,9 @@ public class RequestHandler extends Thread {
                 String data = HttpRequestUtils.getData(br);
                 if (HttpRequestUtils.saveUser(data)) {
                     byte[] body = Files.readAllBytes(new File("./webapp" + "/index.html").toPath());
-                    response302Header(dos, body.length);
+                    response302Header(dos, body.length, "http://localhost:8080/index.html");
                     responseBody(dos, body);
+                    log.debug("[회원 가입 성공]");
                 }
             } else if (requestLine.equals("/user/login")) {
                 String data = HttpRequestUtils.getData(br);
@@ -47,9 +53,39 @@ public class RequestHandler extends Thread {
                     byte[] body = Files.readAllBytes(new File("./webapp" + "/index.html").toPath());
                     response302HeaderwithLogin(dos, body.length, "/index.html", "true");
                     responseBody(dos, body);
+                    log.debug("[login] : 로그인 성공");
                 }
                 byte[] body = Files.readAllBytes(new File("./webapp" + "/user/login_failed.html").toPath());
                 response302HeaderwithLogin(dos, body.length, "/user/login_failed.html", "false");
+                responseBody(dos, body);
+            } else if (requestLine.equals("/user/list")) {
+                String readline = br.readLine();
+                while (!readline.equals("")) {
+                    if (readline.contains("Cookie: ")) {
+                        log.debug("쿠키라인: " + readline);
+                        Map<String, String> cookies = HttpRequestUtils.parseCookies(readline.substring(readline.indexOf(" ")).trim());log.debug("쿠키확인: " + cookies.get("logined"));
+                        if (Boolean.parseBoolean(cookies.get("logined"))) {
+                            //유저 리스트 보여준다
+                            log.debug("[로그인 확인]");
+                            Collection<User> userList = DataBase.findAll();
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("<table><tbody>");
+                            for (User user : userList) {
+                                sb.append("</th>");
+                                sb.append("<td>" + user.getUserId() + "</td>");
+                                sb.append("<td>" + user.getName() + "</td>");
+                                sb.append("<td>" + user.getEmail() + "</td>");
+                            }
+                            sb.append("</tbody></table>");
+                            byte[] body = sb.toString().getBytes();
+                            response200Header(dos, body.length);
+                            responseBody(dos, body);
+                        }
+                    }
+                    readline = br.readLine();
+                }
+                byte[] body = Files.readAllBytes(new File("./webapp" + "/user/login.html").toPath());
+                response302Header(dos, body.length, "http://localhost:8080/user/login.html");
                 responseBody(dos, body);
             }
 
@@ -63,10 +99,10 @@ public class RequestHandler extends Thread {
         return split[1];
     }
 
-    private void response302Header(DataOutputStream dos, int lengthOfBodyContent) {
+    private void response302Header(DataOutputStream dos, int lengthOfBodyContent, String url) {
         try {
             dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
-            dos.writeBytes("Location: http://localhost:8080/index.html\r\n");
+            dos.writeBytes("Location: "+ url + "\r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent+ "\r\n");
             dos.writeBytes("\r\n");
@@ -92,7 +128,7 @@ public class RequestHandler extends Thread {
             dos.writeBytes("Location: http://localhost:8080" + url +"\r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("Set-Cookie: logined=" + check);
+            dos.writeBytes("Set-Cookie: logined=" + check +";");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
