@@ -27,7 +27,6 @@ public class RequestHandler extends Thread {
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
-            // TODO 리팩토링 절실..
 
             DataOutputStream dos = new DataOutputStream(out);
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -42,22 +41,16 @@ public class RequestHandler extends Thread {
             } else if (requestLine.contains("/user/create")) {
                 String data = HttpRequestUtils.getData(br);
                 if (HttpRequestUtils.saveUser(data)) {
-                    byte[] body = Files.readAllBytes(new File("./webapp" + "/index.html").toPath());
-                    response302Header(dos, body.length, "http://localhost:8080/index.html");
-                    responseBody(dos, body);
+                    response302(out, "/index.html");
                     log.debug("[회원 가입 성공]");
                 }
             } else if (requestLine.equals("/user/login")) {
                 String data = HttpRequestUtils.getData(br);
                 if (HttpRequestUtils.findUser(data)) {
-                    byte[] body = Files.readAllBytes(new File("./webapp" + "/index.html").toPath());
-                    response302HeaderwithLogin(dos, body.length, "/index.html", "true");
-                    responseBody(dos, body);
+                    response302withLogin(out, "/index.html", "true");
                     log.debug("[login] : 로그인 성공");
                 }
-                byte[] body = Files.readAllBytes(new File("./webapp" + "/user/login_failed.html").toPath());
-                response302HeaderwithLogin(dos, body.length, "/user/login_failed.html", "false");
-                responseBody(dos, body);
+                response302withLogin(out, "/user/login_failed.html", "false");
             } else if (requestLine.equals("/user/list")) {
                 String readline = br.readLine();
                 while (!readline.equals("")) {
@@ -84,9 +77,7 @@ public class RequestHandler extends Thread {
                     }
                     readline = br.readLine();
                 }
-                byte[] body = Files.readAllBytes(new File("./webapp" + "/user/login.html").toPath());
-                response302Header(dos, body.length, "http://localhost:8080/user/login.html");
-                responseBody(dos, body);
+                response302(out, "/user/login.html");
             } else {
                 byte[] body = Files.readAllBytes(new File("./webapp" + requestLine).toPath());
                 responseCSS(dos, body.length);
@@ -113,12 +104,26 @@ public class RequestHandler extends Thread {
         return split[1];
     }
 
+    private void response302(OutputStream out, String url) throws IOException {
+        DataOutputStream dos = new DataOutputStream(out);
+        byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+        response302Header(dos, body.length, "http://localhost:8080" + url);
+        responseBody(dos, body);
+    }
+
+    private void response302withLogin(OutputStream out, String url, String checked) throws IOException {
+        DataOutputStream dos = new DataOutputStream(out);
+        byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+        response302HeaderwithLogin(dos, body.length, url, checked);
+        responseBody(dos, body);
+    }
+
     private void response302Header(DataOutputStream dos, int lengthOfBodyContent, String url) {
         try {
             dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
-            dos.writeBytes("Location: "+ url + "\r\n");
+            dos.writeBytes("Location: " + url + "\r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent+ "\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -150,10 +155,10 @@ public class RequestHandler extends Thread {
     private void response302HeaderwithLogin(DataOutputStream dos, int lengthOfBodyContent, String url, String check) {
         try {
             dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
-            dos.writeBytes("Location: http://localhost:8080" + url +"\r\n");
+            dos.writeBytes("Location: http://localhost:8080" + url + "\r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("Set-Cookie: logined=" + check +";");
+            dos.writeBytes("Set-Cookie: logined=" + check + ";");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
