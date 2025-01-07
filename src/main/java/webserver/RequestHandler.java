@@ -63,8 +63,8 @@ public class RequestHandler extends Thread {
                 while (!readline.equals("")) {
                     if (readline.contains("Cookie: ")) {
                         log.debug("쿠키라인: " + readline);
-                        Map<String, String> cookies = HttpRequestUtils.parseCookies(readline.substring(readline.indexOf(" ")).trim());log.debug("쿠키확인: " + cookies.get("logined"));
-                        if (Boolean.parseBoolean(cookies.get("logined"))) {
+
+                        if (isLogin(readline)) {
                             //유저 리스트 보여준다
                             log.debug("[로그인 확인]");
                             Collection<User> userList = DataBase.findAll();
@@ -96,6 +96,16 @@ public class RequestHandler extends Thread {
         } catch (IOException e) {
             log.error(e.getMessage());
         }
+    }
+
+    private boolean isLogin(String readline) {
+        String[] split = readline.split(":");
+        Map<String, String> cookies = HttpRequestUtils.parseCookies(split[1].trim());
+        String value = cookies.get("logined");
+        if (value == null) {
+            return false;
+        }
+        return Boolean.parseBoolean(value);
     }
 
     private String getRequestLine(String line) {
