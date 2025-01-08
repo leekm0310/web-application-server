@@ -10,6 +10,14 @@ import org.junit.Test;
 import util.HttpRequestUtils.Pair;
 
 public class HttpRequestUtilsTest {
+
+    @Test
+    public void getLength() {
+        String lengthString = "Content-Length: 53";
+        int length = HttpRequestUtils.getLength(lengthString);
+        assertThat(length, is(53));
+    }
+
     @Test
     public void parseQueryString() {
         String queryString = "userId=javajigi";

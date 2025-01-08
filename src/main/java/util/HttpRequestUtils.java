@@ -1,11 +1,15 @@
 package util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import db.DataBase;
+import model.User;
 
 public class HttpRequestUtils {
     /**
@@ -51,6 +55,42 @@ public class HttpRequestUtils {
 
     public static Pair parseHeader(String header) {
         return getKeyValue(header, ": ");
+    }
+
+    public static String getData(BufferedReader br) throws IOException {
+        int contentLength = 0;
+        String line = br.readLine();
+        while (!line.equals("")) {
+            line = br.readLine();
+            if (line.contains("Content-Length")) {
+                contentLength = getLength(line);
+            }
+        }
+
+        return IOUtils.readData(br, contentLength);
+    }
+
+    public static boolean saveUser(String data) {
+        // user 객체 생성
+        Map<String, String> params = HttpRequestUtils.parseQueryString(data);
+        // user 객체 저장
+        DataBase.addUser(new User(params.get("userId"), params.get("password"), params.get("name"), params.get("mail")));
+        return true;
+    }
+
+    public static boolean findUser(String data) {
+        // TODO 유저 없을 경우
+        Map<String, String> loginData = HttpRequestUtils.parseQueryString(data);
+        User user = DataBase.findUserById(loginData.get("userId"));
+        if (user.getPassword().equals(loginData.get("password"))) {
+            return true;
+        }
+        return false;
+    }
+
+    public static int getLength(String str) {
+        String[] split = str.split(":");
+        return Integer.parseInt(split[1].trim());
     }
 
     public static class Pair {
