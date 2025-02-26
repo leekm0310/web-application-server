@@ -36,7 +36,7 @@ public class HttpRequest {
             }
 
             if ("POST".equals(method)) {
-                String body = IOUtils.readData(br, Integer.parseInt(headers.get("Content-length")));
+                String body = IOUtils.readData(br, Integer.parseInt(headers.get("Content-Length")));
                 params = HttpRequestUtils.parseQueryString(body);
             }
 
