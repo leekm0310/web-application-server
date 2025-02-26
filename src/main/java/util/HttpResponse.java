@@ -39,6 +39,14 @@ public class HttpResponse {
         }
     }
 
+    public void forwardBody(String body) {
+        byte[] contents = body.getBytes();
+        headers.put("Content-Type", "text/html;charset=uft-8");
+        headers.put("Content-Length", contents.length + "");
+        response200Header(contents.length);
+        responseBody(contents);
+    }
+
     public void redirect(String redirectUrl) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
