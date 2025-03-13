@@ -9,10 +9,10 @@ import util.HttpResponse;
 import java.util.Collection;
 import java.util.Map;
 
-public class ListUserController implements Controller {
+public class ListUserController extends AbstractController {
 
     @Override
-    public void service(HttpRequest request, HttpResponse response) {
+    public void doGet(HttpRequest request, HttpResponse response) {
         //로그인 되어 있는지 확인 - 쿠키로
         if (!isLogin(request.getHeader("Cookie"))) {
             response.redirect("/user/login.html");

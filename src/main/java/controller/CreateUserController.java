@@ -7,12 +7,12 @@ import org.slf4j.LoggerFactory;
 import util.HttpRequest;
 import util.HttpResponse;
 
-public class CreateUserController implements Controller{
+public class CreateUserController extends AbstractController{
 
     private static final Logger log = LoggerFactory.getLogger(CreateUserController.class);
 
     @Override
-    public void service(HttpRequest request, HttpResponse response) {
+    public void doPost(HttpRequest request, HttpResponse response) {
         //TODO: 유저 빌더 패턴 적용해보기
         log.debug("[called] : UserCreateController");
         User user = new User(request.getParameter("userId"),
